@@ -1,0 +1,12 @@
+$def with (titulo, html_cal, anterior, proximo, id_usuario, ip)
+$var cssfiles: static/estilo.css
+$var jsfiles:
+
+<center><font class="fontegrande">$:titulo</font></center><br><br>
+$:html_cal
+<center>
+<a href="$:anterior">Anterior</a>&nbsp;&nbsp;&nbsp;
+<a href="$:proximo">Próximo</a><br><br>
+<a href="http://$ip/painel?id_usuario=$id_usuario">Meu Painel</a>
+</center>
+

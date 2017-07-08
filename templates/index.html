@@ -1,0 +1,10 @@
+$def with (todos)
+Coletas:
+<ul>
+$for todo in todos:
+    <li id="$todo.titulo">$todo.titulo</li>
+</ul>
+
+<form method="post" action="add">
+<p><input type="text" name="titulo" /> <input type="submit" value="Add" /></p>
+</form>

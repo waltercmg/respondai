@@ -1,0 +1,40 @@
+$def with (coleta, id_usuario, usuario, resposta, ip, link_anexo)
+$var cssfiles: static/estilo.css
+$var jsfiles: static/ckeditor/ckeditor.js static/ckeditor/samples/js/sample.js
+
+$for c in coleta:
+  <table align=center>
+<tr><td align=center><b class="fontegrande"><p> Resposta à solicitação $c.id_coleta </p></b></td></tr>
+<tr><td><br><br><br><b>Título:</b> $c.titulo</td></tr>
+<tr><td><b>Solicitação:</b> $:c.conteudo</pre></td></tr>
+<tr><td>Anexo: $:link_anexo</td></tr>
+<tr><td>
+<form name="frm" method="post" action="responder" enctype="multipart/form-data">
+<p>
+<input type="hidden" name="id_coleta" value="$c.id_coleta">
+<input type="hidden" name="conteudo" value="">
+<input type="hidden" name="remetente" value="$id_usuario">
+Resposta: <div id="editor" name="conteudo">$:resposta
+		  </div><br>
+Remetente: <b>$usuario</b><br>
+<input type="submit" onclick="javascript:setConteudo();" value="responder" /></p>
+</form>
+</td></tr>
+</table>
+
+<center>
+<a href="http://$ip/painel?id_usuario=$id_usuario">Meu Painel</a>
+
+</center>
+
+<script language="javaScript">
+	initSample();
+ 
+function setConteudo(){
+    form = document.forms.frm;
+	var data = CKEDITOR.instances.editor.getData();
+    form.conteudo.value = data;
+}
+
+    // Your code to save "data", usually through Ajax.
+</script>

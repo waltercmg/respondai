@@ -1,0 +1,51 @@
+$def with (todos, ip)
+$var cssfiles: static/estilo.css
+$var jsfiles: static/ckeditor/ckeditor.js static/ckeditor/samples/js/sample.js
+
+<table align=center>
+<tr><td align=center><b class="fontegrande">NOVA SOLICITAÇÃO</b><br><br><br><br></td></tr>
+<tr><td>
+<form method="post" action="add" name="frm" enctype="multipart/form-data">
+<input type="hidden" name="conteudo" value="">
+<p>
+Titulo<font color=red>*</font>:<br> <input type="text" name="titulo" size=100/><br>
+Conteúdo<font color=red>*</font>:
+<div id="editor" name="conteudo">                
+				</div><br>
+
+Exige resposta: <input type="radio" name="exige" value="s" checked> Sim &nbsp;&nbsp;
+<input type="radio" name="exige" value="n">Não<br>
+Anexo: <input type="file" name="anexo1"/><br>
+Prazo<font color=red>*</font>: <input type="date" name="prazo" value=""><br>
+Destinatários<font color=red>*</font>:<br> 
+$for todo in todos:
+  $if todo.tipo == 1:
+    <input type="checkbox" name="destinatario" value="$todo.id_usuario" checked>$todo.nome
+  $if todo.tipo == 2:
+    <input type="checkbox" name="destinatario" value="$todo.id_usuario">substituto<br>
+<input type="button" onclick="javascript:setConteudo();" value="Enviar!" /></p>
+</form>
+</td></tr></table>
+<br>
+<center>
+<a href="http://$ip/painel">Meu Painel</a>
+</center>
+
+<script language="javaScript">
+	initSample();
+
+
+function setConteudo(){
+    form = document.forms.frm;
+	var data = CKEDITOR.instances.editor.getData();
+    form.conteudo.value = data;
+    if(form.titulo.value=="" || form.prazo.value=="" || form.conteudo.value==""){ 
+       alert("Preencha os campos obrigatórios.");
+	   return;
+    }
+	form.submit();
+}
+
+
+    // Your code to save "data", usually through Ajax.
+</script>

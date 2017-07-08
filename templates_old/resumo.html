@@ -1,0 +1,31 @@
+$def with (todos)
+$var cssfiles: static/estilo.css
+$var jsfiles:
+<center><b>RESUMO</b></center><br><br>
+<form method="post" action="consolidar" name="frm">
+<table align=center class='estiloTabelaGenerica' >
+$ cont = 0
+$for todo in todos:
+  $ respondeu = 'NAO'
+  $if cont==0:
+     <tr><td><b>TÍTULO</b></td><td>$todo.titulo - $todo.prazo.strftime('%d/%m/%y')</td></tr>
+     <tr><td><b>LOTAÇÃO</b></td><td align=center><b>RESPONDEU?</b></td></tr>
+     <input type=hidden name="id_coleta" value="$todo.id_coleta">
+     $ cont= cont+1 
+  $if todo.resposta:
+     $ respondeu = 'SIM'  
+    <tr><td align=center>$todo.nome</td><td align=center>$respondeu</td></tr>
+
+<tr><td colspan=2 align=center>____________________</td></tr>
+<tr><td colspan=2 align=center></td></tr>
+<tr><td colspan=2>Consolidar respostas e enviar:</td></tr>
+<tr><td>Para:</td><td><input type="text" name="para" value="walter.galvao@serpro.gov.br"/></td></tr>
+<tr><td colspan=2 align=center><input type="submit" value="Enviar!" /></td></tr>
+</table>
+</form>
+<br>
+<center>
+<a href="javascript:window.history.back();"><< Voltar</a>
+</center>
+
+

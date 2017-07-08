@@ -1,0 +1,16 @@
+$def with (todos)
+$var cssfiles: static/estilo.css
+$var jsfiles: static/ckeditor/ckeditor.js static/ckeditor/samples/js/sample.js
+
+<form method="get" action="painel" name="frm">
+<table align=center >
+<tr><td align=center><img src="static/logo.jpg"  width="15%"></td></tr>
+<tr><td align=center><br><br><br>
+<select name="id_usuario" class="fontegrande">
+$for todo in todos:
+  <option value="$todo.id_usuario">$todo.nome</option>
+<option value="">ECAD</option>
+</select>
+<input type="submit" value="Entrar!" class="fontegrande"/>
+</td></tr></table>
+</form>

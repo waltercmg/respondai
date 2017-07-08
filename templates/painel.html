@@ -1,0 +1,34 @@
+$def with (usuario, ip)
+$var cssfiles: static/estilo.css
+$var jsfiles:
+
+$ usu = "ECAD"
+$if usuario:
+  $for u in usuario:
+     $ usu = u.nome
+     $ id_usuario = u.id_usuario
+
+ <center><b class="fontegrande">PAINEL - $usu</b></center><br><br>
+<table align=center  cellspacing="30" >
+$ tam = 100
+ $if usu == "ECAD":
+   <tr><td align="center"><a href="http://$ip"><img src="static/nova.png" width=$tam height=$tam alt="Nova Solicitação"><br>
+   Nova</a></td>
+   <td align="center"><a href="http://$ip/listar"><img src="static/calendario.png" width=$tam height=$tam alt="Calendário"><br>
+   Ver calendário</a></td>
+   <td align="center"><a href="http://$ip/login"><img src="static/sair.png" width=$tam height=$tam alt="Sair"><br>
+   Sair</a></td>
+   </tr>
+ $else:
+   <tr><td align="center">&nbsp;&nbsp;<a href="http://$ip/listar?id_usuario=$id_usuario&pendentes=s">
+       <img src="static/calendario_p.png" width=$tam height=$tam alt="Pendentes"><br>
+   Pendentes</a></td>
+   <td align="center"><a href="http://$ip/listar?id_usuario=$id_usuario"><img src="static/calendario_c.png" width=$tam height=$tam alt="Completo"><br>
+   Completo</a></td>
+   <td align="center"><a href="http://$ip/login"><img src="static/sair.png" width=$tam height=$tam alt="Sair"><br>
+   Sair</a></td>
+   </tr>
+</table>
+
+
+ 

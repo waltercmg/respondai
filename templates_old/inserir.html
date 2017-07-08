@@ -1,0 +1,45 @@
+$def with (todos)
+$var cssfiles: static/estilo.css
+$var jsfiles: static/ckeditor/ckeditor.js static/ckeditor/samples/js/sample.js
+
+
+<table align=center>
+<tr><td align=center><b>NOVA COLETA</b><br><br><br><br></td></tr>
+<tr><td>
+<form method="post" action="add" name="frm" enctype="multipart/form-data">
+<input type="hidden" name="conteudo" value="">
+<p>
+Titulo: <input type="text" name="titulo" size=80/><br>
+<div id="editor" name="conteudo">                
+				</div><br>
+Anexo: <input type="file" name="anexo1" /><br>
+Exige resposta: <input type="radio" name="exige" value="s" checked> Sim &nbsp;&nbsp;
+<input type="radio" name="exige" value="n">Não<br>
+Prazo: <input type="date" name="prazo" value="n"><br>
+Destinatários:<br> 
+$for todo in todos:
+  $if todo.tipo == 1:
+    <input type="checkbox" name="destinatario" value="$todo.id_usuario">$todo.nome
+  $if todo.tipo == 2:
+    <input type="checkbox" name="destinatario" value="$todo.id_usuario">substituto<br>
+<input type="submit"  onclick="javascript:setConteudo();" value="Enviar!" /></p>
+</form>
+</td></tr></table>
+<br>
+<center>
+<a href="javascript:window.history.back();"><< Voltar</a>
+</center>
+
+<script language="javaScript">
+	initSample();
+ 
+function setConteudo(){
+    form = document.forms.frm;
+	var data = CKEDITOR.instances.editor.getData();
+    form.conteudo.value = data;
+}
+
+
+    // Your code to save "data", usually through Ajax.
+</script>
+

@@ -1,0 +1,28 @@
+$def with (todos, calendar)
+$var cssfiles: static/estilo.css
+$var jsfiles:
+$var temp = ''
+<table border=1 align=center>
+<tr><td>PRAZO</td><td>TITULO</td><td>NOME</td><td>RESPONDEU?</td></tr>
+    $ prazo_temp = ''
+    $ teste = 6
+    $for todo in todos:
+      $if prazo_temp != '':
+          $if prazo_temp == todo.prazo:
+              $todo.prazo = ''              
+      $ respondeu = 'nao'
+      $# prazo_temp = todo.prazo       
+      $if todo.resposta:
+          $ respondeu = 'sim'      
+      <tr><td>$todo.prazo</td><td><a href="http://0.0.0.0:8080/resposta?id_coleta=$todo.id_coleta&id_usuario=$todo.id_usuario&usuario=$todo.nome">
+         $todo.titulo</a></td><td>$todo.nome</td><td>$respondeu</td></tr>      
+
+</table>
+    $ temp = calendar.formatmonth(2007, teste).replace("1", "AA")
+    $for t in todos:
+       $ dia = t.prazo[-2:] 
+       
+       <b>aloooooo</b>
+       $:calendar.formatmonth(2007, teste)
+
+    $:calendar.formatmonth(2007, teste)

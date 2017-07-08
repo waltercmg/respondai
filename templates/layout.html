@@ -1,0 +1,17 @@
+$def with (content)
+<html>
+<head>
+    $if content.cssfiles:
+        $for f in content.cssfiles.split():
+            <link rel="stylesheet" href="$f" type="text/css" media="screen" charset="utf-8"/>
+
+    $if content.jsfiles:
+        $for f in content.jsfiles.split():
+            <script src="$f"></script>
+            
+<title>RESPONDAi</title>
+</head>
+<body>
+$:content
+</body>
+</html>

@@ -1,0 +1,116 @@
+
+body { 
+    font-family:verdana,arial; 
+    font-size:8pt; 
+} 
+td { 
+    font-family:verdana,arial; 
+    font-size:8pt; 
+}
+
+select { font-size: 100% }
+
+.opcaoPerfVerm{
+    color:red;
+}
+.opcaoPerfAzul{
+    color:blue;
+}
+
+.button {border: 1px solid #000000; font-size: 1em ; font-weight: bold; background-color: #cccccc; }
+
+.text { border: 1px solid #000000; font-size: 1em }
+
+text.input {
+	font-family:verdana,arial; 
+    font-size:8pt;
+    border-color:336699; 
+  	border-style:inset; 
+  	border-width:2px;
+}
+
+.fontegrande {
+	font-family:verdana,arial; 
+    font-size:15pt;
+}
+
+.estilotabela{ 
+    background-color:eeeeee; 
+    border-style:solid; 
+    border-color:666666; 
+    border-width:1px; 
+}
+
+.estilotabelageral{ 
+    background-color:4582fc; 
+    border-style:solid; 
+    border-color:666666; 
+    border-width:1px; 
+}
+.estiloTabelaDetalhe{ 
+    background-color:ffffff; 
+    border-style:solid; 
+    border-color:666666; 
+    border-width:1px; 
+}
+.estiloOculto{     
+    display: none;
+}
+.estiloTabelaGenerica{
+	border-style:solid; 
+    border-color:666666; 
+    border-width:1px; 
+}
+.estiloSubTituloDetalhe{ 
+    background-color:eeeeee;
+    visibility:collapse;   
+}
+.estiloTituloGeral{ 
+    background-color:008877; 
+    color:ffffff; 
+    font-weight:bold; 
+    font-size:10pt;
+    font-color:ffffff;
+}
+
+.estiloTituloConsulta{ 
+    background-color:000099; 
+    color:ffffff; 
+    font-weight:bold; 
+    font-size:10pt;
+    font-color:ffffff;
+} 
+ 
+.estiloTituloDetalhe{ 
+    background-color:008877; 
+    color:ffffff; 
+    font-weight:bold; 
+    font-size:10pt; 
+}
+.estiloFloat{
+    position:absolute;
+    top:10%;
+    right:10%;
+    border:0px solid #656565;    
+}
+a.estiloLink:active{
+    text-decoration: none;
+    color:ffffff;
+}
+a.estiloLink:link{
+    text-decoration: none;
+    color:ffffff;
+}
+a.estiloLink:visited{
+    text-decoration: none;
+    color:ffffff;
+}
+a.estiloLink:hover{
+    text-decoration: none;
+    color:ffffff;
+}
+
+.marker
+{
+	background-color: Yellow;
+}

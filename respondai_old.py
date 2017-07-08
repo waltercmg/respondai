@@ -1,0 +1,271 @@
+import web, shutil, sys, smtplib, calendar, psycopg2, base64, time
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from datetime import date
+
+
+render = web.template.render('templates/', base='layout', globals={ 'str': str, 'date': date })
+db = web.database(dbn='postgres', user='postgres', pw='postgres!23', db='respondai')
+ip = "respondai-waltercmg.c9users.io"
+#ip = "10.32.64.91"
+#http://webpy.org/cookbook/storeupload/
+conexao = psycopg2.connect(database='respondai', user='postgres', password='postgres!23') 
+cursor = conexao.cursor()
+
+# para instalar o psycopg2: sudo pip install django psycopg2
+# para configurar o postgres:
+#    sudo vi /etc/postgresql/9.3/main/pg_hba.conf
+#    trocar a linha local   all             postgres                                peer POR
+#                   local   all             postgres                                md5
+#    restartar o postgres: sudo service postgresql restart
+
+urls = (
+    '/', 'index',
+    '/add', 'add',
+    '/resposta', 'resposta',
+    '/responder', 'responder',
+    '/listar', 'listar',
+    '/resumo', 'resumo',
+    '/consolidar', 'consolidar',
+    '/painel', 'painel'
+)
+
+class index:
+    def GET(self):  
+       todos = db.select('usuario', order="nome, tipo")
+       return render.inserir(todos)
+
+class painel:
+    def GET(self):
+       usuario = None
+       i = web.input(id_usuario=None)
+       if i.id_usuario:
+          myvar = dict(id_usuario=int(i.id_usuario))
+          usuario = db.select('usuario', myvar, where="id_usuario = $id_usuario")
+       return render.painel(usuario, ip)
+
+class listar:
+    def GET(self):  
+       i = web.input(id_usuario=None, pendentes=None, mes=str(date.today().month), ano=str(date.today().year))
+       if i.id_usuario:
+            if i.pendentes:
+                todos = db.query('SELECT id_coleta, titulo, prazo FROM coleta WHERE id_coleta IN ' +
+                            '(SELECT DISTINCT(id_coleta) FROM coleta_usuario WHERE id_usuario=$id_usuario AND resposta IS NULL) '+
+                            'ORDER BY prazo', vars={'id_usuario': int(i.id_usuario)})
+            else:
+                todos = db.query('SELECT id_coleta, titulo, prazo FROM coleta WHERE id_coleta IN ' +
+                            '(SELECT DISTINCT(id_coleta) FROM coleta_usuario WHERE id_usuario=$i.id_usuario) '+
+                            'AND date_part(\'year\', prazo) = $i.ano and ' +
+                            'date_part(\'month\', prazo) = $i.mes ' +
+                            'ORDER BY prazo', vars=locals())
+       else:
+           todos = db.select('coleta',  where="date_part('year', prazo) = $i.ano and " + 
+                              "date_part('month', prazo) = $i.mes", vars=locals(), order="prazo")       
+       c = calendar.HTMLCalendar(calendar.SUNDAY).formatmonth(int(i.ano), int(i.mes))
+       c=c.replace("<td", "<td align=center valign=top width=150 height=70")
+       c=c.replace("<table", "<table align=center class='estiloTabelaGenerica' border=1")
+
+       for todo in todos:   
+            dia = str(int(todo.prazo.strftime('%d')))
+            if i.id_usuario:
+                c=c.replace(">" + dia + "<", " bgcolor=#ccffff>" + dia + "<br><a href='http://"+ip+"/resposta?id_coleta="+str(todo.id_coleta)+"&id_usuario="+i.id_usuario+"'>"+todo.titulo+"</a><")  
+            else:
+                c=c.replace(">" + dia + "<", " bgcolor=#ccffff>" + dia + "<br><a href='http://"+ip+"/resumo?id_coleta="+str(todo.id_coleta)+"'>"+todo.titulo+"</a><")  
+       return render.listar(c)
+
+class resumo:
+    def GET(self):         
+       i = web.input(id_coleta=None)
+       todos = db.query('SELECT * FROM coleta, coleta_usuario, usuario WHERE coleta.id_coleta=coleta_usuario.id_coleta AND '+           
+                        'coleta_usuario.id_usuario=usuario.id_usuario AND coleta.id_coleta=$id_coleta '+
+                        'ORDER BY nome', vars={'id_coleta': int(i.id_coleta)})
+       return render.resumo(todos)
+                 
+class consolidar():
+
+    def POST(self):         
+       i = web.input()       
+       #titulo = db.select('coleta', , where="id_coleta = $id_coleta")
+       titulo, corpo = self.get_texto_consol(i.id_coleta)         
+       self.enviar_email(i.para, titulo, corpo)
+       todos = db.select('coleta', order="prazo")       
+       c = calendar.HTMLCalendar(calendar.SUNDAY)
+       return render.painel(None)
+
+    def get_texto_consol(self, id_coleta):
+       titulo = ""
+       texto = ""
+       todos = db.query('SELECT * FROM coleta, coleta_usuario, usuario WHERE coleta.id_coleta=coleta_usuario.id_coleta AND '+           
+                        'coleta_usuario.id_usuario=usuario.id_usuario AND coleta.id_coleta=$id_coleta '+
+                        'ORDER BY nome', vars={'id_coleta': int(id_coleta)})
+       for todo in todos:
+           titulo = todo.titulo
+           if todo.resposta == None:
+              todo.resposta = "Sem resposta."
+           texto = texto + "<b>" + todo.nome + "</b>: <br><br>" + str(todo.resposta) + "<br><br>"
+       titulo = "[respondai] Respostas de: " + titulo
+       texto = "Seguem respostas:<br><br>" + texto
+       return titulo, texto
+
+    def enviar_email(self, destinatario, titulo, corpo):
+        me = "respondai@serpro.gov.br"
+        you = destinatario
+
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = titulo
+        msg['From'] = me
+        msg['To'] = you
+
+        text = "Teste"
+        html = corpo
+
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(html, 'html')
+
+        msg.attach(part1)
+        msg.attach(part2)
+        s = smtplib.SMTP('localhost')
+       # s.sendmail(me, you, msg.as_string())
+
+class add:
+   
+    def send_mail(self, destinatario, titulo, id_coleta, prazo, id_usuario, usuario):
+        me = "respondai@serpro.gov.br"
+        you = destinatario
+
+        # Create message container - the correct MIME type is multipart/alternative.
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "[respondai] - " + titulo
+        msg['From'] = me
+        msg['To'] = you
+
+        # Create the body of the message (a plain-text and an HTML version).
+        text = "Hi!\nHow are you?\nHere is the link you wanted:\nhttps://www.python.org"
+        html = "<html><head></head><body><p><br><br>"+\
+        	   "Favor responder a esta <a href=\"http://"+ip+"/resposta?id_coleta=" + str(id_coleta) +\
+               "&usuario="+str(usuario)+"&id_usuario="+str(id_usuario)+"\">"+\
+               "solicitacao</a>"+\
+               "&nbsp;antes de " + str(prazo) + "</p></body></html>"
+
+        # Record the MIME types of both parts - text/plain and text/html.
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(html, 'html')
+
+        # Attach parts into message container.
+        # According to RFC 2046, the last part of a multipart message, in this case
+        # the HTML message, is best and preferred.
+        msg.attach(part1)
+        msg.attach(part2)
+
+        # Send the message via local SMTP server.
+        s = smtplib.SMTP('localhost')
+        # sendmail function takes 3 arguments: sender's address, recipient's address
+        # and message to send - here it is sent as one string.
+        s.sendmail(me, you, msg.as_string())
+
+    def POST(self):
+        i = web.input(destinatario = [], anexo1={})
+        if 'anexo1' in i:
+            n = db.insert('coleta', titulo=i.titulo, conteudo=i.conteudo, 
+            exige_resposta=i.exige, prazo=i.prazo, nm_anexo1=i.anexo1.filename, 
+            anexo1=base64.b64encode(i.anexo1.file.read()), seqname='coleta_id_coleta_seq')
+        else:
+            n = db.insert('coleta', titulo=i.titulo, conteudo=i.conteudo, 
+            exige_resposta=i.exige, prazo=i.prazo, seqname='coleta_id_coleta_seq')    
+        for d in i.destinatario:
+           v = db.insert('coleta_usuario', id_coleta=n, id_usuario=d)          
+        e = db.select('usuario', where="id_usuario in $i.destinatario",  vars=locals())
+        #for em in e:          
+        #    self.send_mail(str(em.email), i.titulo, n, i.prazo, em.id_usuario, em.nome)            
+        raise web.seeother('/')
+
+class add_psyco:
+   
+    def send_mail(self, destinatario, titulo, id_coleta, prazo, id_usuario, usuario):
+        me = "respondai@serpro.gov.br"
+        you = destinatario
+
+        # Create message container - the correct MIME type is multipart/alternative.
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "[respondai] - " + titulo
+        msg['From'] = me
+        msg['To'] = you
+
+        # Create the body of the message (a plain-text and an HTML version).
+        text = "Hi!\nHow are you?\nHere is the link you wanted:\nhttps://www.python.org"
+        html = "<html><head></head><body><p><br><br>"+\
+        	   "Favor responder a esta <a href=\"http://"+ip+"/resposta?id_coleta=" + str(id_coleta) +\
+               "&usuario="+str(usuario)+"&id_usuario="+str(id_usuario)+"\">"+\
+               "solicitacao</a>"+\
+               "&nbsp;antes de " + str(prazo) + "</p></body></html>"
+
+        # Record the MIME types of both parts - text/plain and text/html.
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(html, 'html')
+
+        # Attach parts into message container.
+        # According to RFC 2046, the last part of a multipart message, in this case
+        # the HTML message, is best and preferred.
+        msg.attach(part1)
+        msg.attach(part2)
+
+        # Send the message via local SMTP server.
+        s = smtplib.SMTP('localhost')
+        # sendmail function takes 3 arguments: sender's address, recipient's address
+        # and message to send - here it is sent as one string.
+        s.sendmail(me, you, msg.as_string())
+
+
+    def POST(self):
+        i = web.input(destinatario = [])
+        if 'anexo1' in i:
+            print("ENTROUUUUUUUU")
+            cursor.execute("INSERT INTO coleta (titulo, conteudo, anexo1) VALUES (%s, %s, %s)", (i.titulo, i.conteudo, psycopg2.Binary(i.anexo1),))
+            #cursor.execute("INSERT INTO coleta (anexo1) VALUES (%s)", (psycopg2.Binary(i.anexo1),))
+            #cur.execute("INSERT INTO public.test VALUES (%s)", (psycopg2.Binary(data),))
+            print ("INSERIU>>>> OK")
+        #    n = db.insert('coleta', titulo=i.titulo, conteudo=i.conteudo, exige_resposta=i.exige, prazo=i.prazo, anexo1=i.anexo1, seqname='coleta_id_coleta_seq')
+        #else:
+        #    n = db.insert('coleta', titulo=i.titulo, conteudo=i.conteudo, exige_resposta=i.exige, prazo=i.prazo, seqname='coleta_id_coleta_seq')    
+        #for d in i.destinatario:
+        #   v = db.insert('coleta_usuario', id_coleta=n, id_usuario=d)          
+        #e = db.select('usuario', where="id_usuario in $i.destinatario",  vars=locals())
+        #for em in e:          
+        #    self.send_mail(str(em.email), i.titulo, n, i.prazo, em.id_usuario, em.nome)            
+        raise web.seeother('/')
+
+class responder:
+    def POST(self):
+        i = web.input(anexo1={})
+        if 'anexo1' in i:
+            n = db.update('coleta_usuario', where='id_coleta = $i.id_coleta and id_usuario=$i.remetente', 
+            resposta=i.conteudo, anexo1=base64.b64encode(i.anexo1.file.read()), vars=locals())
+        else:
+            n = db.update('coleta_usuario', where='id_coleta = $i.id_coleta and id_usuario=$i.remetente', resposta=i.conteudo, vars=locals())
+        usuario = db.select('usuario', where="id_usuario = $i.remetente", vars=locals())
+        return render.painel(usuario, ip)        
+
+class resposta:
+    def GET(self):         
+        i = web.input(id_coleta=None)
+        myvar = dict(id_coleta=i.id_coleta)
+        coleta = db.select('coleta', myvar, where="id_coleta = $id_coleta")
+       
+        cursor.execute("SELECT  anexo1, nm_anexo1 FROM coleta WHERE id_coleta=%s", (i.id_coleta, ))
+        arq = cursor.fetchone()
+        nm_arq_orig = str(arq[1])
+        nm_arq_gerado = nm_arq_orig[:-4] + str(time.time()) + nm_arq_orig[-4:]
+        path_arq = "anexos/"+nm_arq_gerado
+        open(path_arq, 'w+r').write(base64.b64decode(arq[0]))
+        link_anexo = "<a href='" + path_arq + "'>" + nm_arq_orig + "</a>"
+        #usuario = db.select('usuario', where="id_usuario = $i.id_usuario", vars=locals())
+        cursor.execute("SELECT  nome FROM usuario WHERE id_usuario=%s", (i.id_usuario, ))
+        usuario = cursor.fetchone()
+        print "OPAAAA>>>>>" +str(usuario[0])
+        return render.resposta(coleta, i.id_usuario, str(usuario[0]), link_anexo, ip)
+
+
+if __name__ == "__main__":
+    app = web.application(urls, globals())
+    app.run()

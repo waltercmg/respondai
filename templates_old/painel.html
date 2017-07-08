@@ -1,0 +1,25 @@
+$def with (usuario, ip)
+$var cssfiles: static/estilo.css
+$var jsfiles:
+
+$ usu = "ECAD"
+$if usuario:
+  $for u in usuario:
+     $ usu = u.nome
+     $ id_usuario = u.id_usuario
+
+ <center><b>PAINEL - $usu</b></center><br><br>
+
+ $if usu == "ECAD":
+  <table align=center class='estiloTabelaGenerica' >
+   <tr><td><a href="http://$ip">Criar nova coleta</a></td></tr>
+   <tr><td><a href="http://$ip/listar">Ver calendário</a></td></tr>
+  </table>
+ $else:
+  <table align=center class='estiloTabelaGenerica' >
+   <tr><td><a href="http://$ip/listar?id_usuario=$id_usuario&pendentes=s">Ver pendentes</a></td></tr>
+   <tr><td><a href="http://$ip/listar?id_usuario=$id_usuario">Ver completo</a></td></tr>
+  </table>
+
+
+ 

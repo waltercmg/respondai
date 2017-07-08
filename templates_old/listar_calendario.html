@@ -1,0 +1,13 @@
+$def with (todos, calendar)
+$var cssfiles: static/estilo.css
+$var jsfiles:
+$var temp = ''
+  
+    $ temp = calendar.formatmonth(2007, teste).replace("1", "AA")
+    $ prazo_temp = ''
+    $ teste = 6
+    $for todo in todos:
+       $ dia = t.prazo[-2:] 
+       <b>$dia</b>
+      
+
